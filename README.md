@@ -9,7 +9,11 @@ XTrack3D is an open source 3D single object tracking toolbox based on PyTorch, t
 ## Setup
 
 
+## Model Zoo
 
+|Model Name|Status|
+|----|----|
+|CXTrack| √ |
 
 
 ## Get Started
