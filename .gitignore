@@ -127,3 +127,25 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# vscode settings
+/.vscode/
+
+# workspace
+/workspace/
+
+# data
+/data/
+
+# debug
+debug*
+
+# tmp
+tmp/
+
+# open3d
+/DepthCamera*
+/DepthCapture*
+
+# scripts
+/*.sh
