@@ -121,8 +121,10 @@ class BaseTask(pl.LightningModule):
         # if batch_idx != 0:
         #     return
         tracklet = batch[0]
+        torch.cuda.synchronize()
         start_time = time.time()
         pred_bboxes, gt_bboxes = self.forward_on_tracklet(tracklet)
+        torch.cuda.synchronize()
         end_time = time.time()
         runtime = end_time-start_time
         n_frames = len(tracklet)
@@ -206,6 +208,9 @@ class BaseTask(pl.LightningModule):
         self.log('precesion', self.prec.compute(), prog_bar=True)
         self.log('success', self.succ.compute(), prog_bar=True)
         self.log('runtime', self.runtime.compute(), prog_bar=True)
+        self.txt_log.info('============ Final ============')
+        self.txt_log.info('Prec=%.3f Succ=%.3f' %
+                          (self.prec.compute(), self.succ.compute()))
         if self.cfg.save_test_result:
             self.pred_bboxes.sort(key=lambda x: x[0])
             data = []

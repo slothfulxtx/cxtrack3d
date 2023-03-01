@@ -6,9 +6,9 @@ import open3d
 import numpy as np
 import torch
 
-from utils import Logger, estimateAccuracy, estimateOverlap, TorchSuccess, TorchPrecision, IO
+from utils import Logger, estimateAccuracy, estimateOverlap, TorchSuccess, TorchPrecision
 from datasets import create_datasets
-from datasets.utils import BoundingBox, crop_and_center_pcd
+from datasets.utils import BoundingBox
 
 
 def parse_args():
@@ -190,14 +190,6 @@ def visualize_tracklet(tracklet_id, tracklet, result, cfg, log):
         pred_bbox_vis = not pred_bbox_vis
         visualize_frame(vis, current_frame_id)
 
-    def save_target_pcd(vis):
-        nonlocal current_frame_id, pcds, gt_bboxes
-        tgt = crop_and_center_pcd(
-            pcds[current_frame_id], gt_bboxes[current_frame_id])
-        IO.put('./tmp/tgt_pcd_%d.xyz' % current_frame_id, tgt.points.T)
-        log.info('#### save tgt pcd (frame = %d) to /tmp/ ###' %
-                 current_frame_id)
-
     def exit_vis(vis):
         vis.destroy_window()
 
@@ -209,7 +201,6 @@ def visualize_tracklet(tracklet_id, tracklet, result, cfg, log):
 
     vis.register_key_callback(90, switch_pred_bbox)
     vis.register_key_callback(88, switch_gt_bbox)
-    vis.register_key_callback(80, save_target_pcd)
     vis.register_key_callback(27, exit_vis)
     # vis.poll_events()
     vis.run()
