@@ -1,4 +1,4 @@
-# CXTrack:Improving 3D Point Cloud Tracking with Contextual Information
+# CXTrack:Improving 3D Point Cloud Tracking with Contextual Information (CVPR2023)
 
 The official code release of [CXTrack](https://arxiv.org/pdf/2211.08542.pdf).
 
