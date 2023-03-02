@@ -44,8 +44,8 @@ Others can be seen in [Open3DSOT](https://github.com/Ghostish/Open3DSOT)
   ```
 ### Waymo Open Dataset
 
-* We follow the benchmark created by [LiDAR-SOT](https://github.com/TuSimple/LiDAR_SOT) based on the waymo open dataset. You can download and process the waymo dataset as guided by [their code](https://github.com/TuSimple/LiDAR_SOT), and use our code to test model performance on this benchmark.
-* The benchmark they built have many things that we don't use, but the following processing results are necessary:
+* We follow the benchmark created by [LiDAR-SOT](https://github.com/TuSimple/LiDAR_SOT) based on the waymo open dataset. You can download and process the waymo dataset as guided by [LiDAR_SOT](https://github.com/TuSimple/LiDAR_SOT), and use our code to test model performance on this benchmark.
+* The following processing results are necessary
 ```
 [waymo_sot]
     [benchmark]
@@ -69,10 +69,12 @@ Others can be seen in [Open3DSOT](https://github.com/Ghostish/Open3DSOT)
 
 ### NuScenes
 
-We cite the following sentences from [STNet](https://github.com/fpthink/STNet)
+We follow [V2B](https://github.com/fpthink/V2B) to prepare the nuscenes dataset, and we also cite the following sentences from [STNet](https://github.com/fpthink/STNet)
 
 
 > Since both kitti and waymo are datasets constructed from 64-line LiDAR, nuScenes is a 32-line LiDAR. We recommend you: train your model on KITTI and verify the generalization ability of your model on waymo. Train on nuScenes or simply skip this dataset. We do not recommend that you verify the generalization ability of your model on nuScenes. 
+
+**Tips: If you have the wrong version of NuScenes dependencies, you will most likely not reproduce our results.**
 
 ## Get Started
 

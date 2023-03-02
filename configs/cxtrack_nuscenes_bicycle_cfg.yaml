@@ -1,0 +1,198 @@
+# dataset configs
+
+dataset_cfg:
+  dataset_type: NuScenesFull
+  data_root_dir: data/nuscenes_kitti_fmt/
+  category_name: Bicycle
+  cache_eval: False
+  coordinate_mode: camera
+  preload_offset: 10
+  num_candidates_per_frame: 4
+  search_npts: 1024
+  search_offset: 2.0
+  search_offset2: 0.0
+  search_scale: 1.0
+  template_npts: 1024
+  template_offset: 2.0
+  template_offset2: 0.0
+  template_scale: 1.0
+  model_scale: 1.25
+  model_offset: 0.0
+  offset_max: [3., 10., 10.]
+  up_axis: [0,-1,0]
+  degree: True 
+  train_cfg:
+    use_z: True
+    use_augmentation: False
+  eval_cfg:
+    use_z: True
+    reference_bbox: previous_pred
+
+# model configs
+
+model_cfg:
+  model_type: CXTrack
+  
+  backbone_cfg:
+    type: DGCNN
+    layers_cfg:
+      - {
+        mlps: [0, 64, 64, 128],
+        use_xyz: True,
+        sample_method: Range,
+        nsample: 32,
+      }
+      - {
+        mlps: [128, 128, 128, 128],
+        use_xyz: True,
+        sample_method: Range,
+        nsample: 32,
+      }
+      - {
+        mlps: [128, 256, 256, 256],
+        use_xyz: True,
+        sample_method: Range,
+        nsample: 32,
+      }
+    geo_channels: 256
+    out_channels: 256
+    downsample_ratios: [2,4,8]
+  
+  transformer_cfg:
+    feat_dim: 256
+    mask_radii: False
+    layers_cfg: 
+      - {
+        type: attn,
+        feat_dim: 256,
+        num_heads: 1,
+        attn_dropout: 0.1,
+        norm: 'layer_norm',
+        ffn_cfg: {
+          hidden_dim: 256,
+          activation: 'relu',
+          dropout: 0.1,
+          use_bias: True,
+          norm: 'layer_norm'
+        },
+        pos_emb_cfg: {
+          type: mlp
+        },
+        mask_emb: mask_trfm,        
+        mask_pred: true,
+        center_pred: true,
+        dropout: 0.1
+      }
+      - {
+        type: attn,
+        feat_dim: 256,
+        num_heads: 1,
+        attn_dropout: 0.1,
+        norm: 'layer_norm',
+        ffn_cfg: {
+          hidden_dim: 256,
+          activation: 'relu',
+          dropout: 0.1,
+          use_bias: True,
+          norm: 'layer_norm'
+        },
+        pos_emb_cfg: {
+          type: mlp
+        },
+        mask_emb: mask_trfm,        
+        mask_pred: true,
+        center_pred: true,
+        dropout: 0.1
+      }
+      - {
+        type: attn,
+        feat_dim: 256,
+        num_heads: 1,
+        attn_dropout: 0.1,
+        norm: 'layer_norm',
+        ffn_cfg: {
+          hidden_dim: 256,
+          activation: 'relu',
+          dropout: 0.1,
+          use_bias: True,
+          norm: 'layer_norm'
+        },
+        pos_emb_cfg: {
+          type: mlp
+        },
+        mask_emb: mask_trfm,        
+        mask_pred: true,
+        center_pred: true,
+        dropout: 0.1
+      }
+      - {
+        type: attn,
+        feat_dim: 256,
+        num_heads: 1,
+        attn_dropout: 0.1,
+        norm: 'layer_norm',
+        ffn_cfg: {
+          hidden_dim: 256,
+          activation: 'relu',
+          dropout: 0.1,
+          use_bias: True,
+          norm: 'layer_norm'
+        },
+        pos_emb_cfg: {
+          type: mlp
+        },
+        mask_emb: mask_trfm,     
+        mask_pred: true,
+        center_pred: true,
+        dropout: 0.1
+      }
+      # - {
+      #   type: attn,
+      #   feat_dim: 256,
+      #   num_heads: 1,
+      #   attn_dropout: 0.1,
+      #   norm: 'layer_norm',
+      #   ffn_cfg: {
+      #     hidden_dim: 256,
+      #     activation: 'relu',
+      #     dropout: 0.1,
+      #     use_bias: True,
+      #     norm: 'layer_norm'
+      #   },
+      #   pos_emb_cfg: {
+      #     type: mlp
+      #   },
+      #   mask_emb: mask_trfm,        
+      #   mask_pred: true,
+      #   center_pred: true,
+      #   dropout: 0.1
+      # }
+
+  exrpn_cfg:
+    feat_dim: 256
+    transformer_cfg:
+      layers_cfg:
+      - type: attn
+        radius: 0.3
+        feat_dim: 256
+        num_heads: 1
+        attn_dropout: 0.1
+        norm: layer_norm
+        pos_emb_cfg:
+          type: mlp
+        mask_emb: mask_trfm
+        center_emb: true
+        dropout: 0.1
+        sigma_n2: 0.1
+        fixed_sigma_n2: True
+
+# task configs
+
+task_type: CXTrackTask
+
+# optimizer & scheduler configs
+
+eval_cfg:
+  batch_size: 1
+  num_workers: 4
+  iou_space: 3 

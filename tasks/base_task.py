@@ -30,6 +30,11 @@ class BaseTask(pl.LightningModule):
             self.n_frames_easy = 0
             self.n_frames_medium = 0
             self.n_frames_hard = 0
+        elif 'NuScenes' in cfg.dataset_cfg.dataset_type:
+            self.prec = TorchPrecision()
+            self.succ = TorchSuccess()
+            self.n_frames_total = 0
+            self.n_frames_key = 0
         else:
             self.prec = TorchPrecision()
             self.succ = TorchSuccess()
@@ -97,6 +102,12 @@ class BaseTask(pl.LightningModule):
         self.succ.reset()
         self.runtime.reset()
 
+    def _on_test_epoch_start_nuscenes_format(self):
+        self.prec.reset()
+        self.succ.reset()
+        self.n_frames_total = 0
+        self.n_frames_key = 0
+
     def _on_test_epoch_start_waymo_format(self):
         self.succ_total.reset()
         self.prec_total.reset()
@@ -114,6 +125,8 @@ class BaseTask(pl.LightningModule):
     def on_test_epoch_start(self):
         if 'Waymo' in self.cfg.dataset_cfg.dataset_type:
             self._on_test_epoch_start_waymo_format()
+        elif 'NuScenes' in self.cfg.dataset_cfg.dataset_type:
+            self._on_test_epoch_start_nuscenes_format()
         else:
             self._on_test_epoch_start_kitti_format()
 
@@ -146,6 +159,32 @@ class BaseTask(pl.LightningModule):
         self.prec(torch.tensor(accuracies, device=self.device))
         self.runtime(torch.tensor(runtime, device=self.device),
                      torch.tensor(n_frames, device=self.device))
+
+    def _test_step_nuscenes_format(self, batch, batch_idx):
+        # if batch_idx != 0:
+        #     return
+        tracklet = batch[0]
+        if tracklet[0]['anno']['num_lidar_pts'] == 0:
+            return
+        n_frames = len(tracklet)
+        self.n_frames_total += n_frames
+        pred_bboxes, gt_bboxes = self.forward_on_tracklet(tracklet)
+        overlaps, accuracies = [], []
+        for i, (pred_bbox, gt_bbox) in enumerate(zip(pred_bboxes, gt_bboxes)):
+            anno = tracklet[i]['anno']
+            if anno['is_key_frame'] == 1:
+                self.n_frames_key += 1
+                overlap = estimateOverlap(
+                    gt_bbox, pred_bbox, dim=self.cfg.eval_cfg.iou_space, up_axis=self.cfg.dataset_cfg.up_axis)
+                accuracy = estimateAccuracy(
+                    gt_bbox, pred_bbox, dim=self.cfg.eval_cfg.iou_space, up_axis=self.cfg.dataset_cfg.up_axis)
+                overlaps.append(overlap)
+                accuracies.append(accuracy)
+
+        self.succ(torch.tensor(overlaps, device=self.device))
+        self.prec(torch.tensor(accuracies, device=self.device))
+        self.txt_log.info('Key: Prec=%.3f Succ=%.3f Key Frames=(%d/%d)' % (
+            self.prec.compute(), self.succ.compute(), self.n_frames_key, self.n_frames_total))
 
     def _test_step_waymo_format(self, batch, batch_idx):
         # if batch_idx != 0:
@@ -201,6 +240,8 @@ class BaseTask(pl.LightningModule):
     def test_step(self, batch, batch_idx):
         if 'Waymo' in self.cfg.dataset_cfg.dataset_type:
             return self._test_step_waymo_format(batch, batch_idx)
+        elif 'NuScenes' in self.cfg.dataset_cfg.dataset_type:
+            return self._test_step_nuscenes_format(batch, batch_idx)
         else:
             return self._test_step_kitti_format(batch, batch_idx)
 
@@ -222,6 +263,11 @@ class BaseTask(pl.LightningModule):
             with open(osp.join(self.cfg.work_dir, 'result.json'), 'w') as f:
                 json.dump(data, f)
 
+    def _on_test_epoch_end_nuscenes_format(self):
+        self.txt_log.info('============ Final ============')
+        self.txt_log.info('Key: Prec=%.3f Succ=%.3f Key Frames=(%d/%d)' % (
+            self.prec.compute(), self.succ.compute(), self.n_frames_key, self.n_frames_total))
+
     def _on_test_epoch_end_waymo_format(self):
         self.txt_log.info('============ Final ============')
         self.txt_log.info('Total: Prec=%.3f Succ=%.3f Frames=%d' % (
@@ -236,5 +282,7 @@ class BaseTask(pl.LightningModule):
     def on_test_epoch_end(self):
         if 'Waymo' in self.cfg.dataset_cfg.dataset_type:
             return self._on_test_epoch_end_waymo_format()
+        elif 'NuScenes' in self.cfg.dataset_cfg.dataset_type:
+            return self._on_test_epoch_end_nuscenes_format()
         else:
             return self._on_test_epoch_end_kitti_format()
