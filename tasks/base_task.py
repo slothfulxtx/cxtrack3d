@@ -101,6 +101,18 @@ class BaseTask(pl.LightningModule):
         self.prec.reset()
         self.succ.reset()
         self.runtime.reset()
+        if self.cfg.model_cfg.model_type == 'CXTrack':
+            # warm up for inference time evaluation
+            fake_input = dict(
+                template_pcd=torch.randn(1, 1024, 3).cuda(),
+                search_pcd=torch.randn(1, 1024, 3).cuda(),
+                template_mask_ref=torch.rand(1, 1024).cuda(),
+                search_mask_ref=torch.rand(1, 1024).cuda(),
+            )
+
+            with torch.no_grad():
+                for _ in range(100):
+                    _ = self.model(fake_input)
 
     def _on_test_epoch_start_nuscenes_format(self):
         self.prec.reset()

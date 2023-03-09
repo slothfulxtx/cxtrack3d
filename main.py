@@ -207,19 +207,6 @@ def main():
         logger = CustomTensorBoardLogger(
             save_dir=cfg.work_dir, version='', name='')
 
-        model = task.model.cuda().eval()
-
-        # warm up for inference time evaluation
-        fake_input = dict(
-            template_pcd=torch.randn(1, 1024, 3).cuda(),
-            search_pcd=torch.randn(1, 1024, 3).cuda(),
-            template_mask_ref=torch.rand(1, 1024).cuda(),
-            search_mask_ref=torch.rand(1, 1024).cuda(),
-        )
-
-        with torch.no_grad():
-            for _ in range(100):
-                _ = model(fake_input)
 
         trainer = pl.Trainer(
             gpus=cfg.gpus,
